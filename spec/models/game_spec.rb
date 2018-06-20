@@ -60,7 +60,7 @@ RSpec.describe Game, type: :model do
     end
   end
 
-  context 'Checking status' do
+  context 'Checking .status' do
     before(:each) do
       game_w_questions.finished_at = Time.now
       expect(game_w_questions.finished?).to be_truthy
@@ -84,6 +84,18 @@ RSpec.describe Game, type: :model do
 
     it ':money' do
       expect(game_w_questions.status).to eq(:money)
+    end
+  end
+
+  context '.current_game_question' do
+    it '.current_game_question equals 1' do
+      expect(game_w_questions.current_game_question.level).to eq(0)
+    end
+  end
+
+  context '.previous_level' do
+    it '.previous_level equeal 0' do
+      expect(game_w_questions.previous_level).to eq(-1)
     end
   end
 end
