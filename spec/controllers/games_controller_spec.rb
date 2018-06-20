@@ -7,7 +7,7 @@ RSpec.describe GamesController, type: :controller do
   let(:admin) {FactoryBot.create(:user, is_admin: true)}
   let(:game_w_questions) {FactoryBot.create(:game_with_questions, user: user)}
 
-  context 'Anon' do
+  context 'Anonim' do
     it 'kick from #show' do
       get :show, id: game_w_questions.id
 
