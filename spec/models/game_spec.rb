@@ -98,4 +98,26 @@ RSpec.describe Game, type: :model do
       expect(game_w_questions.previous_level).to eq(-1)
     end
   end
+
+  context '.answer_current_question!' do
+    it '.answer_current_question! times out' do
+      game_w_questions.time_out!
+      expect(game_w_questions.answer_current_question!(0)).to be_falsey
+    end
+
+    it '.answer_current_question! answers correct' do
+      game_w_questions.answer_current_question!('d')
+      expect(game_w_questions.current_game_question.level).to eq(1)
+    end
+
+    it '.answer_current_question! answers incorrect' do
+      game_w_questions.answer_current_question!('a')
+      expect(game_w_questions.current_game_question.level).to eq(0)
+    end
+
+    it '.answer_current_question! finishs game' do
+      game_w_questions.answer_current_question!('d')
+      expect(game_w_questions.finished?).to be_falsy
+    end
+  end
 end
