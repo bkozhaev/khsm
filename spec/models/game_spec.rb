@@ -99,25 +99,31 @@ RSpec.describe Game, type: :model do
     end
   end
 
-  context '#answer_current_question!' do
-    it 'should return false' do
-      game_w_questions.time_out!
-      expect(game_w_questions.answer_current_question!(0)).to be_falsey
+  context '.answer_current_question!' do
+    let(:q) {game_w_questions.current_game_question}
+    it 'answers right answer' do
+      game_w_questions.answer_current_question!(q.correct_answer_key)
+
+      #проверяем статус игры который должен быть in_progress
+      expect(game_w_questions.status).to eq(:in_progress)
+      #проверяем что уровень игры поднялся на один
+      expect(game_w_questions.current_level).to eq(1)
+      #проверяем обновление поля updated_at
+      expect(game_w_questions.updated_at).to be
+      #проверяем записался ли приз
+      game_w_questions.take_money!
+      expect(game_w_questions.prize).to eq(100)
     end
 
-    it 'should return 1 (which means correct answer)' do
-      game_w_questions.answer_current_question!('d')
-      expect(game_w_questions.current_game_question.level).to eq(1)
-    end
+    it 'answers wrong answer' do
+      game_w_questions.answer_current_question!(!q.correct_answer_key)
 
-    it 'should not increment levels of the game' do
-      game_w_questions.answer_current_question!('a')
+      #проверяем что уровень оставлся прежний
       expect(game_w_questions.current_game_question.level).to eq(0)
-    end
-
-    it 'should finish the game' do
-      game_w_questions.answer_current_question!('d')
-      expect(game_w_questions.finished?).to be_falsy
+      #проверяем что статус игры переключения на fail
+      expect(game_w_questions.status).to eq(:fail)
+      #проверяем обновление поля finished_at
+      expect(game_w_questions.finished_at).to be
     end
   end
 end
