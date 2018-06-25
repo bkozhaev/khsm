@@ -2,9 +2,9 @@ require 'rails_helper'
 require 'support/my_spec_helper'
 
 RSpec.describe Game, type: :model do
-  let(:user) { FactoryBot.create(:user)}
+  let(:user) {FactoryBot.create(:user)}
 
-  let(:game_w_questions) { FactoryBot.create(:game_with_questions, user: user)}
+  let(:game_w_questions) {FactoryBot.create(:game_with_questions, user: user)}
 
   context 'game mechanics' do
     it 'answer correct continues' do
@@ -51,7 +51,7 @@ RSpec.describe Game, type: :model do
       game_w_questions.take_money!
 
       prize = game_w_questions.prize
-      expect(prize).to be >0
+      expect(prize).to be > 0
 
       expect(game_w_questions.status).to eq :money
       expect(game_w_questions.finished?).to be_truthy
@@ -99,31 +99,64 @@ RSpec.describe Game, type: :model do
     end
   end
 
-  context '.answer_current_question!' do
+  context '.answer_current_question! right answer' do
     let(:q) {game_w_questions.current_game_question}
-    it 'answers right answer' do
-      game_w_questions.answer_current_question!(q.correct_answer_key)
 
+    before(:each) do
+      game_w_questions.answer_current_question!(q.correct_answer_key)
+    end
+
+    it 'checks the game .status' do
       #проверяем статус игры который должен быть in_progress
       expect(game_w_questions.status).to eq(:in_progress)
+    end
+
+    it 'increases the .current_level' do
       #проверяем что уровень игры поднялся на один
       expect(game_w_questions.current_level).to eq(1)
+    end
+
+    it 'updates .updated_at field' do
       #проверяем обновление поля updated_at
       expect(game_w_questions.updated_at).to be
+    end
+
+    it 'put data to .prize field' do
       #проверяем записался ли приз
       game_w_questions.take_money!
       expect(game_w_questions.prize).to eq(100)
     end
+  end
+  context '.answer_current_question! wring answer' do
+    let(:q) {game_w_questions.current_game_question}
 
-    it 'answers wrong answer' do
+    before(:each) do
       game_w_questions.answer_current_question!(!q.correct_answer_key)
+    end
 
-      #проверяем что уровень оставлся прежний
+    it 'stays on the same .level' do
+      #проверяем что уровень остался прежний
       expect(game_w_questions.current_game_question.level).to eq(0)
+    end
+
+    it 'checks the game .status' do
       #проверяем что статус игры переключения на fail
       expect(game_w_questions.status).to eq(:fail)
+    end
+
+    it 'updates .finished_at field' do
       #проверяем обновление поля finished_at
       expect(game_w_questions.finished_at).to be
     end
+
+    it 'return false' do
+      game_w_questions.finished?
+      #проверяем если ответ дан после истечения времени
+      expect(game_w_questions.answer_current_question!(q.correct_answer_key)).to be_truthy
+    end
   end
 end
+
+
+
+
