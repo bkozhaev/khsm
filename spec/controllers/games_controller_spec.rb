@@ -15,6 +15,22 @@ RSpec.describe GamesController, type: :controller do
       expect(response).to redirect_to(new_user_session_path)
       expect(flash[:alert]).to be
     end
+
+    it 'kick from #create' do
+      post :create
+
+      expect(response.status).not_to eq 200
+      expect(response).to redirect_to(new_user_session_path)
+      expect(flash[:alert]).to be
+    end
+
+    it 'kick from #answer' do
+      put :answer, id: game_w_questions.id
+
+      expect(response.status).not_to eq 200
+      expect(response).to redirect_to(new_user_session_path)
+      expect(flash[:alert]).to be
+    end
   end
 
   context 'Usual user' do
@@ -85,10 +101,20 @@ RSpec.describe GamesController, type: :controller do
       expect(flash[:warning]).to be
     end
 
-    it 'denies to start two games by the same user' do
+    # юзер пытается создать новую игру, не закончив старую
+    it 'try to create second game' do
+      # убедились что есть игра в работе
+      expect(game_w_questions.finished?).to be_falsey
 
-      
-      new_game = FactoryBot.create(:game_with_questions, user: user)
+      # отправляем запрос на создание, убеждаемся что новых Game не создалось
+      expect { post :create }.to change(Game, :count).by(0)
+
+      game = assigns(:game) # вытаскиваем из контроллера поле @game
+      expect(game).to be_nil
+
+      # и редирект на страницу старой игры
+      expect(response).to redirect_to(game_path(game_w_questions))
+      expect(flash[:alert]).to be
     end
   end
 end
