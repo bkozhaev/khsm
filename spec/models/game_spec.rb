@@ -6,6 +6,8 @@ RSpec.describe Game, type: :model do
 
   let(:game_w_questions) {FactoryBot.create(:game_with_questions, user: user)}
 
+  let(:q) {game_w_questions.current_game_question}
+
   context 'game mechanics' do
     it 'answer correct continues' do
       level = game_w_questions.current_level
@@ -99,61 +101,53 @@ RSpec.describe Game, type: :model do
     end
   end
 
-  context '.answer_current_question! right answer' do
-    let(:q) {game_w_questions.current_game_question}
+  it '.answer_current_question! right answer' do
+    q = game_w_questions.current_game_question
 
-    before(:each) do
-      game_w_questions.answer_current_question!(q.correct_answer_key)
-    end
-
-    it 'checks the game .status' do
-      #проверяем статус игры который должен быть in_progress
-      expect(game_w_questions.status).to eq(:in_progress)
-    end
-
-    it 'increases the .current_level' do
-      #проверяем что уровень игры поднялся на один
-      expect(game_w_questions.current_level).to eq(1)
-    end
-
-    it 'updates .updated_at field' do
-      #проверяем обновление поля updated_at
-      expect(game_w_questions.updated_at).to be
-    end
-
-    it 'put data to .prize field' do
-      #проверяем записался ли приз
-      game_w_questions.take_money!
-      expect(game_w_questions.prize).to eq(100)
-    end
+    game_w_questions.answer_current_question!(q.correct_answer_key)
+    #проверяем статус игры который должен быть in_progress
+    expect(game_w_questions.status).to eq(:in_progress)
+    #проверяем что уровень игры поднялся на один
+    expect(game_w_questions.current_level).to eq(1)
+    #проверяем обновление поля updated_at
+    expect(game_w_questions.updated_at).to be
+    #проверяем записался ли приз
+    game_w_questions.take_money!
+    expect(game_w_questions.prize).to eq(100)
   end
-  context '.answer_current_question! wring answer' do
-    let(:q) {game_w_questions.current_game_question}
 
-    before(:each) do
-      game_w_questions.answer_current_question!(!q.correct_answer_key)
-    end
+  it '.answer_current_question! wrong answer' do
+    q = game_w_questions.current_game_question
 
-    it 'stays on the same .level' do
-      #проверяем что уровень остался прежний
-      expect(game_w_questions.current_game_question.level).to eq(0)
-    end
+    game_w_questions.answer_current_question!(!q.correct_answer_key)
+    #проверяем что уровень остался прежний
+    expect(game_w_questions.current_game_question.level).to eq(0)
+    #проверяем что статус игры переключения на fail
+    expect(game_w_questions.status).to eq(:fail)
+    #проверяем обновление поля finished_at
+    expect(game_w_questions.finished_at).to be
+    game_w_questions.finished?
+    #проверяем если ответ дан после истечения времени
+    expect(game_w_questions.answer_current_question!(q.correct_answer_key)).to be_falsey
+  end
 
-    it 'checks the game .status' do
-      #проверяем что статус игры переключения на fail
-      expect(game_w_questions.status).to eq(:fail)
-    end
+  it '.answer_current_question! last(million)' do
+    game_w_questions.current_level = Question::QUESTION_LEVELS.max
+    game_w_questions.answer_current_question!(q.correct_answer_key)
 
-    it 'updates .finished_at field' do
-      #проверяем обновление поля finished_at
-      expect(game_w_questions.finished_at).to be
-    end
+    #проверяем что статус игры переключения на won
+    expect(game_w_questions.status).to eq(:won)
+    expect(game_w_questions.finished?).to be_truthy
+    expect(game_w_questions.prize).to eq(1000000)
+  end
 
-    it 'return false' do
-      game_w_questions.finished?
-      #проверяем если ответ дан после истечения времени
-      expect(game_w_questions.answer_current_question!(q.correct_answer_key)).to be_truthy
-    end
+  it '.answer_current_question! answered after time is finished' do
+    game_w_questions.created_at = 36.minutes.ago
+    game_w_questions.answer_current_question!(q.correct_answer_key)
+
+    expect(game_w_questions.is_failed).to eq(true)
+    expect(game_w_questions.status).to eq(:timeout)
+    expect(game_w_questions.finished?).to be_truthy
   end
 end
 
