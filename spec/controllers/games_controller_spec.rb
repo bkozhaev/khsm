@@ -128,11 +128,7 @@ RSpec.describe GamesController, type: :controller do
       put :answer, id: game_w_questions.id, letter: !q.correct_answer_key
 
       expect(flash[:alert]).to be
-      expect(flash[:alert]).to eq(I18n.t(
-          'controllers.games.bad_answer',
-          answer: cor_ans,
-          prize: prize
-      ))
+      expect(flash[:alert]).to eq("Правильный ответ: #{cor_ans}. Игра закончена, ваш приз #{prize}")
       expect(game_w_questions.finished?).to be_falsey
       expect(response).to redirect_to(user_path(user))
       expect(response.status).not_to eq(200)
