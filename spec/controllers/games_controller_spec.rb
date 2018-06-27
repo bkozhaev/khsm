@@ -1,6 +1,7 @@
 require 'rails_helper'
 require 'support/my_spec_helper'
 
+
 RSpec.describe GamesController, type: :controller do
 
   let(:user) {FactoryBot.create(:user)}
@@ -118,15 +119,42 @@ RSpec.describe GamesController, type: :controller do
     end
 
     it 'answers incorrect_answer' do
-      q = game_w_questions.current_game_question
-      game_w_questions.answer_current_question!(!q.correct_answer_key)
 
-      put :answer, id: game_w_questions.id
+      q = game_w_questions.current_game_question
+
+      cor_ans = q.correct_answer
+      prize = ActionController::Base.helpers.number_to_currency(game_w_questions.prize)
+
+      put :answer, id: game_w_questions.id, letter: !q.correct_answer_key
 
       expect(flash[:alert]).to be
-      expect(game_w_questions.finished?).to be_truthy
-      expect(response).to redirect_to(users_path(user))
+      expect(flash[:alert]).to eq(I18n.t(
+          'controllers.games.bad_answer',
+          answer: cor_ans,
+          prize: prize
+      ))
+      expect(game_w_questions.finished?).to be_falsey
+      expect(response).to redirect_to(user_path(user))
+      expect(response.status).not_to eq(200)
 
+    end
+
+    # тест на отработку "помощи зала"
+    it 'uses audience help' do
+      # сперва проверяем что в подсказках текущего вопроса пусто
+      expect(game_w_questions.current_game_question.help_hash[:audience_help]).not_to be
+      expect(game_w_questions.audience_help_used).to be_falsey
+
+      # фигачим запрос в контроллен с нужным типом
+      put :help, id: game_w_questions.id, help_type: :audience_help
+      game = assigns(:game)
+
+      # проверяем, что игра не закончилась, что флажок установился, и подсказка записалась
+      expect(game.finished?).to be_falsey
+      expect(game.audience_help_used).to be_truthy
+      expect(game.current_game_question.help_hash[:audience_help]).to be
+      expect(game.current_game_question.help_hash[:audience_help].keys).to contain_exactly('a', 'b', 'c', 'd')
+      expect(response).to redirect_to(game_path(game))
     end
   end
 end
