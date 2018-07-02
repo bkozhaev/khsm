@@ -141,7 +141,7 @@ RSpec.describe GamesController, type: :controller do
       cor_ans = q.correct_answer
       prize = ActionController::Base.helpers.number_to_currency(game_w_questions.prize)
 
-      put :answer, id: game_w_questions.id, letter: !q.correct_answer_key
+      put :answer, id: game_w_questions.id, letter: 'a'
 
       expect(flash[:alert]).to eq("Правильный ответ: #{cor_ans}. Игра закончена, ваш приз #{prize}")
       expect(response).to redirect_to(user_path(user))
