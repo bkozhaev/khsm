@@ -166,5 +166,12 @@ RSpec.describe GamesController, type: :controller do
       expect(game.current_game_question.help_hash[:audience_help].keys).to contain_exactly('a', 'b', 'c', 'd')
       expect(response).to redirect_to(game_path(game))
     end
+
+    it 'checks fifty_fifty availability' do
+      #проверяем что в подсказках текущего вопроса, подсказку 50/50 не использовали
+      expect(game_w_questions.current_game_question.help_hash[:fift_fifty_help]).not_to be
+      expect(game_w_questions.fifty_fifty_used).to be_falsey
+
+    end
   end
 end
