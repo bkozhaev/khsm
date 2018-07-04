@@ -169,8 +169,19 @@ RSpec.describe GamesController, type: :controller do
 
     it 'checks fifty_fifty availability' do
       #проверяем что в подсказках текущего вопроса, подсказку 50/50 не использовали
-      expect(game_w_questions.current_game_question.help_hash[:fift_fifty_help]).not_to be
+      expect(game_w_questions.current_game_question.help_hash[:fift_fifty]).not_to be
       expect(game_w_questions.fifty_fifty_used).to be_falsey
+
+      # фигачим запрос в контроллен с нужным типом
+      put :help, id: game_w_questions.id, help_type: :fifty_fifty
+      game = assigns(:game)
+
+      expect(game.finished?).to be_falsey
+      expect(game.fifty_fifty_used).to be_truthy
+      expect(game.current_game_question.help_hash[:fifty_fifty]).to be
+      expect(game.current_game_question.help_hash[:fifty_fifty].size).to eq 2
+      expect(game.current_game_question.help_hash[:fifty_fifty]).to include('d')
+      expect(response).to redirect_to(game_path(game))
 
     end
   end
