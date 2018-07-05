@@ -179,10 +179,15 @@ RSpec.describe GamesController, type: :controller do
       expect(game.finished?).to be_falsey
       expect(game.fifty_fifty_used).to be_truthy
       expect(game.current_game_question.help_hash[:fifty_fifty]).to be
-      expect(game.current_game_question.help_hash[:fifty_fifty].size).to eq 2
-      expect(game.current_game_question.help_hash[:fifty_fifty]).to include('d')
-      expect(response).to redirect_to(game_path(game))
 
+      #1.код возврата
+      expect(response.status).to eq(302)
+      #2. Какое собщение будет во flash
+      expect(flash[:info]).to eq('Вы использовали подсказку')
+      #3. Куда средиректит (уже есть у Вас) или какой шаблон отрисуется
+      expect(response).to redirect_to(game_path(game))
+      #4. Записаны ли нужные объекты в @game, например
+      expect(game.current_game_question.help_hash[:fifty_fifty]).to include('d')
     end
   end
 end
