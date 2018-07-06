@@ -187,7 +187,7 @@ RSpec.describe GamesController, type: :controller do
       #3. Куда средиректит (уже есть у Вас) или какой шаблон отрисуется
       expect(response).to redirect_to(game_path(game))
       #4. Записаны ли нужные объекты в @game, например
-      expect(game.current_game_question.help_hash[:fifty_fifty]).to include('d')
+      expect(assigns(:game)).to eq(game)
     end
   end
 end
